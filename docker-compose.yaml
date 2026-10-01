@@ -7,7 +7,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - ${PROJECT_ROOT}/out/pgdata:/var/lib/postgresql
+      - todoapp-pgdata:/var/lib/postgresql
     restart: always
 
   todoapp-postgres-migrate:
@@ -22,5 +22,5 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
 
-
-
+volumes:
+  todoapp-pgdata:
