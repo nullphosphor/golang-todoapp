@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	core_logger "github.com/nullphosphor/golang-todoapp/internal/core/logger"
+	core_http_request "github.com/nullphosphor/golang-todoapp/internal/core/transport/http/request"
 	core_http_response "github.com/nullphosphor/golang-todoapp/internal/core/transport/http/response"
-	core_htpp_utils "github.com/nullphosphor/golang-todoapp/internal/core/transport/http/utils"
 )
 
 type GetUserResponse UserDTOResponse
@@ -15,7 +15,7 @@ func (h *UsersHTTPHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	log := core_logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(log, w)
 
-	userID, err := core_htpp_utils.GetIntPathValue(r, "id")
+	userID, err := core_http_request.GetIntPathValue(r, "id")
 	if err != nil {
 		responseHandler.ErrorResponse(
 			err,

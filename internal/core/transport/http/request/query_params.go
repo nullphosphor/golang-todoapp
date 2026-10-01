@@ -1,4 +1,4 @@
-package core_htpp_utils
+package core_http_request
 
 import (
 	"fmt"

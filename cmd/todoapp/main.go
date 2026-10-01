@@ -7,7 +7,7 @@ import (
 	"syscall"
 
 	core_logger "github.com/nullphosphor/golang-todoapp/internal/core/logger"
-	core_postgres_pool "github.com/nullphosphor/golang-todoapp/internal/core/repository/postgres/pool"
+	core_pgx_pool "github.com/nullphosphor/golang-todoapp/internal/core/repository/postgres/pool/pgx"
 	core_http_middleware "github.com/nullphosphor/golang-todoapp/internal/core/transport/http/middleware"
 	core_http_server "github.com/nullphosphor/golang-todoapp/internal/core/transport/http/server"
 	users_postgres_repository "github.com/nullphosphor/golang-todoapp/internal/features/users/repository/postgres"
@@ -29,8 +29,9 @@ func main() {
 	defer logger.Close()
 
 	logger.Debug("initializing postgres connection pool")
-	pool, err := core_postgres_pool.NewConnectionPool(
-		ctx, core_postgres_pool.NewConfigMust(),
+
+	pool, err := core_pgx_pool.NewPool(
+		ctx, core_pgx_pool.NewConfigMust(),
 	)
 	if err != nil {
 		logger.Fatal("failed to init postgres connection pool", zap.Error(err))
@@ -48,8 +49,8 @@ func main() {
 		logger,
 		core_http_middleware.RequestID(),
 		core_http_middleware.Logger(logger),
-		core_http_middleware.Panic(),
 		core_http_middleware.Trace(),
+		core_http_middleware.Panic(),
 	)
 
 	apiVersionRouter := core_http_server.NewAPIVersionRouter(core_http_server.ApiVersion1)

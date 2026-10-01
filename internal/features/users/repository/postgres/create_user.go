@@ -17,7 +17,7 @@ func (r *UsersRepository) CreateUser(
 	sqlQuery := `
 	INSERT INTO todoapp.users (full_name, phone_number)
 	VALUES ($1, $2)
-	RETURNING id, version, full_name, phone_number	
+	RETURNING id, version, full_name, phone_number;	
 	`
 
 	row := r.pool.QueryRow(ctx, sqlQuery, user.FullName, user.PhoneNumber)
