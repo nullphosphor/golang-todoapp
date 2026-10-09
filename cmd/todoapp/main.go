@@ -5,11 +5,16 @@ import (
 	"log"
 	"os/signal"
 	"syscall"
+	"time"
 
+	core_config "github.com/nullphosphor/golang-todoapp/internal/core/config"
 	core_logger "github.com/nullphosphor/golang-todoapp/internal/core/logger"
 	core_pgx_pool "github.com/nullphosphor/golang-todoapp/internal/core/repository/postgres/pool/pgx"
 	core_http_middleware "github.com/nullphosphor/golang-todoapp/internal/core/transport/http/middleware"
 	core_http_server "github.com/nullphosphor/golang-todoapp/internal/core/transport/http/server"
+	tasks_postgres_repository "github.com/nullphosphor/golang-todoapp/internal/features/tasks/repository/postgres"
+	tasks_service "github.com/nullphosphor/golang-todoapp/internal/features/tasks/service"
+	tasks_transport_http "github.com/nullphosphor/golang-todoapp/internal/features/tasks/transport/http"
 	users_postgres_repository "github.com/nullphosphor/golang-todoapp/internal/features/users/repository/postgres"
 	users_service "github.com/nullphosphor/golang-todoapp/internal/features/users/service"
 	users_transport_http "github.com/nullphosphor/golang-todoapp/internal/features/users/transport/http"
@@ -17,6 +22,9 @@ import (
 )
 
 func main() {
+	cfg := core_config.NewConfigMust()
+	time.Local = cfg.TimeZone
+
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
 		syscall.SIGINT, syscall.SIGTERM,
@@ -28,8 +36,9 @@ func main() {
 	}
 	defer logger.Close()
 
-	logger.Debug("initializing postgres connection pool")
+	logger.Debug("application time zone", zap.Any("zone", time.Local))
 
+	logger.Debug("initializing postgres connection pool")
 	pool, err := core_pgx_pool.NewPool(
 		ctx, core_pgx_pool.NewConfigMust(),
 	)
@@ -43,6 +52,11 @@ func main() {
 	usersService := users_service.NewUsersService(usersRepository)
 	usersTrasportHTTP := users_transport_http.NewUsersHTTPhandler(usersService)
 
+	logger.Debug("initializing feature", zap.String("feature", "tasks"))
+	tasksRepository := tasks_postgres_repository.NewTasksRepository(pool)
+	tasksService := tasks_service.NewTasksService(tasksRepository)
+	tasksTrasportHTTP := tasks_transport_http.NewTasksHTTPHandler(tasksService)
+
 	logger.Debug("initializing HTTP server")
 	httpServer := core_http_server.NewHTTPServer(
 		core_http_server.NewConfigMust(),
@@ -55,6 +69,7 @@ func main() {
 
 	apiVersionRouter := core_http_server.NewAPIVersionRouter(core_http_server.ApiVersion1)
 	apiVersionRouter.RegisterRoutes(usersTrasportHTTP.Routes()...)
+	apiVersionRouter.RegisterRoutes(tasksTrasportHTTP.Routes()...)
 	httpServer.RegisterAPIRouters(apiVersionRouter)
 
 	if err := httpServer.Run(ctx); err != nil {
