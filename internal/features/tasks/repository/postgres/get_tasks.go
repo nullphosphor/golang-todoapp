@@ -60,7 +60,7 @@ func (r *TasksRepository) GetTasks(
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("")
+		return nil, fmt.Errorf("rows err: %w", err)
 	}
 
 	taskDomains := taskDomainsFromModels(taskModels)
