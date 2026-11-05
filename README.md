@@ -1,2 +1,1 @@
-Practice write todoapp
-
+Simple Todo App
